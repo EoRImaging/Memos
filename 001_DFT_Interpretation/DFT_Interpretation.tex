@@ -1,0 +1,249 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amssymb,amsmath}
+\usepackage{pdflscape}
+\usepackage{subfigure}
+\usepackage{dcolumn}
+%\usepackage{rotating}
+\usepackage{fancyhdr}
+\pagestyle{fancyplain}
+
+\newcommand\T{\rule{0pt}{2.6ex}}
+\newcommand\B{\rule[-1.2ex]{0pt}{0pt}}
+
+\begin{document}
+\rhead{Prepared by Adam Beardsley on \today}
+
+\centerline{\sc \large Interpreting Discrete Fourier Transforms}
+\vspace{.5pc}
+
+\begin{abstract}
+We present a systematic way of interpreting the discrete Fourier transform as an approximation to the continuous Fourier transform.  The argument is made for general conventions, and several examples are given.
+\end{abstract}
+
+\section{Introduction}
+
+Often times it is necessary to approximate a continuous Fourier transform (CFT) with a discrete Fourier transform (DFT) when an analytic form of the data is not available.  For example, a DFT can be performed on a sampling of time-ordered electric field measurements to approximate the frequency spectrum of the field.  In order to perform these transforms, we utilize the numerical packages of programming languages such as IDL, MATLAB, or Mathematica.  However, the definition of a Fourier transform is not completely constrained, and freedoms exist that give rise to multiple conventions in the normalization\footnote{There are of course constraints limiting these freedoms, but for this argument we will leave them completely free.}, and scaling of the Fourier domain variables.  In particular, the numerical package being used may not follow the desired convention.  Below we outline a method for interpreting the results of a DFT, in terms of the CFT desired.  Then we provide several examples of common conventions.
+
+\section{Derivation}\label{sec:derivation}
+
+We start by assuming we have a continuous function, $f_c(x)$, of which we would like to compute a continuous Fourier transform of the form
+\begin{equation}
+\label{eq:continuous}
+F_c(u;C_c,p_c)=C_c\int_{-\infty}^{\infty}dx \ f_c(x) e^{i p_c u x}
+\end{equation}
+where the constants $C_c$ and $p_c$ are determined by convention of the transform.  However, in reality we often have a discrete sample of the continuous function, $f_d(j)$, where $j$ indexes the samples and runs from $0$ to $N-1$, $N$ being the number of samples.  Then it is necessary to use a discrete Fourier transform.  Numerical packages have various conventions for their DFTs, but in general they can be expressed in the form
+\begin{equation}
+\label{eq:discrete}
+F_d(k;C_d,p_d)=C_d\sum\limits_{j=0}^{N-1}f_d(j)e^{i p_d j k}
+\end{equation}
+where $k$ indexes the Fourier domain samples, and also runs from $0$ to $N-1$.  In some cases, the indices can be shifted.  For example, MATLAB counts arrays from 1 rather than 0, so the sum would run from $1$ to $N$, and the values in the exponent are adjusted accordingly.  For simplicity, we assume counting from 0.  The translation is straighforward, and an example is given in Section \ref{sec:examples}.  We wish to approximate the CFT with the DFT.
+
+In order to proceed, we assume the function $f_c(x)$ is only significantly non-zero within a domain $\mathcal{D}$.  Furthermore, we will assume $\mathcal{D}=[0,x_{max}]$.  This constraint is not actually necessary, and a translation of the domain results in a phase in the Fourier transform, as seen in Section \ref{sec:shifting}.  Then we can relate the indices in Eq. \eqref{eq:discrete} to the axis values with the following expressions:
+\begin{subequations}
+\label{eq:axes}
+\begin{align}
+x(j)=j\Delta x \label{eq:x_axis}\\
+u(k)=k\Delta u \label{eq:u_axis}
+\end{align}
+\end{subequations}
+where $\Delta x = x_{max}/(N-1)$, and $\Delta u$ will be derived below.  We can now approximate the CFT with a finite sum.
+
+\begin{eqnarray}
+\label{eq:approx_cont}
+F_c(u;C_c,p_c) 	& \approx	&	C_c\int_0 ^{x_{max}} dx \ f_c(x)e^{i p_c u x} \nonumber \\
+								& \approx	&	C_c\sum\limits_{j=0}^{N-1}\Delta x f_c(x(j))e^{i p_c u j \Delta x} \nonumber \\
+								& =				&	C_c \Delta x \sum\limits_{j=0}^{N-1} f_d(j) e^{i p_c u j \Delta x}
+\end{eqnarray}
+
+In order to force the sum in Eq. \eqref{eq:approx_cont} to the form of the DFT (Eq. \eqref{eq:discrete}), we write $u(k)$ in the following way.
+
+\begin{eqnarray}
+\label{eq:delta_u}
+u(k) = k\Delta u	&	= & \frac{p_d k}{p_c \Delta x} \nonumber \\
+		\Rightarrow	\Delta u	&	=	&	\frac{p_d}{p_c \Delta x} 
+\end{eqnarray}
+
+This expression for $\Delta u$ defines our Fourier axis, which is an extremely important part of interpreting a Fourier transform and in particular comparing to other computational conventions.
+
+We can now simplify Eq. \ref{eq:approx_cont}.  
+
+\begin{eqnarray}
+\label{eq:related}
+F_c(u;C_c,p_c)	&	\approx	&	C_c \Delta x \sum\limits_{j=0}^{N-1}f_d(j)e^{i p_d j k} \nonumber \\
+								&	=				&	\frac{C_c}{C_d} \Delta x F_d(k;C_d,p_d) \nonumber \\
+								&	=				&	\frac{C_c}{C_d} \Delta x F_d(u / \Delta u;C_d,p_d)
+\end{eqnarray}
+
+In the first line of Eq. \ref{eq:related} we introduced an intermediate index $k=u/\Delta u$ for clarity in replacing the sum with the DFT.  Of course any computer package will compute the DFT for integer values of $k$, and it should be noted that this approximation for the CFT is only used for $u$ equal to integer multiples of $\Delta u$.
+
+To summarize, we have related an arbitrary convention of the continuous Fourier transform to an arbitrary convention of the discrete Fourier transform (Eq. \ref{eq:related}).  In addition, we have shown the resulting Fourier axis is described by Eq. \ref{eq:delta_u}.  For reference, several examples are discussed in Section \ref{sec:examples}.
+
+\section{Shifting Domains}\label{sec:shifting}
+
+The above derivation applied to functions significantly non-zero only within a domain $\mathcal{D}=[0,x_{max}]$.  We can relax that condition slightly by allowing $\mathcal{D}\rightarrow[x_{min},x_{max}]$.  The same process can be followed as in Section \ref{sec:derivation}, with a simple translation of the variable of integration.  The result is a mode-dependent phase, and we can generalize Eq. \ref{eq:related} as
+\begin{equation}
+\label{eq:related_general}
+F_c(u;C_c,p_c) \approx \frac{C_c}{C_d} \Delta x e^{i p_c u x_{min}}F_d(u / \Delta u;C_d,p_d)
+\end{equation}
+where now $\Delta x = (x_{max}-x_{min})/(N-1)$.
+
+A particular case of interest is to shift the real and Fourier domains such that they are centered at zero.  This can be achieved by a couple shifts of the arrays.  In this case, $x_{min} = -\Delta x (N-1)/2$.  The phases in Eq. \ref{eq:related_general} are now negative, but can be shifted properly to make them positive.  This amounts to exchanging the positive and negative $x$ data in $f_d(j)$.  This is illustrated in Step A in Fig. \ref{fig:shifting}.
+
+Once the DFT is performed, our approximation for $F_c(u)$ is still only valid for positive (or in some cases only negative) values of $u$.  But we note that by the periodic nature of a complex phase, for $k>(N-1)/2$, and for $p_d = 2 \pi / N$ (as is normally the case), we can make the substituion $k\rightarrow-N+k$ and the sum in Eq. \ref{eq:discrete} remains unchanged.  In other words, we can relabel and shift our $u$ axis to center our Fourier axis on $u=0$, as shown in Steps C and D in Fig. \ref{fig:shifting}.  All these operations can be easily implemented using shifting functions built into many software packages.  In MATLAB, for example, \texttt{ifftshift} (Step A) and \texttt{fftshift} (Step D) are provided for this very reason.
+
+
+\begin{figure}
+\begin{center}
+\centerline{\includegraphics[width=7in]{FFT_shifts.jpg}}
+\end{center}
+\caption{Centering axes on 0.  \emph{Step A}: Shift the real axis to be fed into DFT package.  \emph{Step B}: Perform discrete Fourier transform.  \emph{Step C}: Relabel Fourier modes to equivalent negative modes.  \emph{Step D}: Shift Fourier axis to recover correct order.}
+\label{fig:shifting}
+\end{figure}
+
+\section{Examples}\label{sec:examples}
+
+Here we apply the interpretation of Section \ref{sec:derivation} specifically to the default MATLAB discrete Fourier transform.  Further examples are listed in Table \ref{table:examples}.  For the forward DFT, MATLAB uses the convention
+
+\begin{equation}
+F_d(k) = \sum\limits_{j=1}^N f_d(j)e^{-2 \pi i (j-1)(k-1)/N}, \nonumber
+\end{equation}
+so that $C_d=1$ and $p_d = -2 \pi / N$.  Note the shift in indices due to the fact that MATLAB counts from 1, rather than zero.  This can be accounted for by writing the axes as
+\begin{eqnarray}
+x(j) = (j-1)\Delta x \nonumber \\
+u(k) = (k-1)\Delta u \nonumber
+\end{eqnarray}
+where $\Delta u = p_d/(p_c \Delta x) = -2 \pi / (p_c N \Delta x)$.
+
+Let us now assume that we have sampled a function of position, $f_d(j)$, with resolution $\Delta x = 3$m, and $N = 1001$ ($x_{range} = 3000$m).  We are interested in the Fourier transform of the form
+\begin{equation}
+F_c(u) = \frac{1}{\sqrt{2 \pi}}\int_{-\infty}^{\infty} dx \ f_c(x) e^{i u x} \nonumber
+\end{equation}
+so that $C_c=1/\sqrt{2\pi}$ and $p_c=1$.  Then we use Eq. \ref{eq:related} to approximate the CFT as
+\begin{equation}
+F_c(u) \approx \frac{3\mbox{m}}{\sqrt{2\pi}} F_d(-u \frac{3003\mbox{m}}{2\pi}+1;1,2\pi/N) \nonumber
+\end{equation}
+where $F_d(k,1,2\pi/N)$ is the array output from MATLAB's \texttt{fft} function, given $f_d(j)$.  Note that because the sign of $p_c$ is opposite the sign of $p_d$, the approximation for the CFT will only be valid for negative Fourier modes.  In most applications this difference will not be significant, but in some cases it may be important to account for the axis reversal.
+
+Similar steps can be taken for any DFT convention, and some common default parameters are listed in Table \ref{table:examples}.  We also list several common CFT conventions and their corresponding conversions from common numerical packages in Table \ref{table:applied_examples}.
+
+
+%Figure format
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=4in]{file.jpg}
+%\end{center}
+%\caption{Put a caption here, if you dare}
+%\label{fig:figure_label}
+%\end{figure}
+
+
+%appendix if needed
+%\clearpage
+%\appendix
+%\section{appendix section}\label{app_section}
+
+
+\begin{table}
+\begin{center}
+\centerline{\begin{tabular}{c c c c c c} 
+\hline
+Package	\T \B			&	$F_d(k)$	&	$C_d$	&	$p_d$	&	$x(j)$	&	$u(k)$	\\ \hline
+IDL			\T \B			&	$\frac{1}{N}\sum\limits_{j=0}^{N-1} f_d(j)e^{-2\pi i j k /N}$					&	$1/N$									&	$-2\pi/N$	&	$j\Delta x$			&	$-k\frac{2\pi}{p_c N \Delta x}$			 \\
+MATLAB	\T \B			&	$\sum\limits_{j=1}^N f_d(j)e^{2\pi i (j-1)(k-1)/N}$										&	1											&	$-2\pi/N$	&	$(j-1)\Delta x$	&	$-(k-1)\frac{2\pi}{p_c N \Delta x}$	 \\
+Mathematica	\T \B	&	$\frac{1}{\sqrt{N}}\sum\limits_{j=1}^N f_d(j)e^{2\pi i (j-1)(k-1)/N}$	&	$\frac{1}{\sqrt{N}}$	&	$2\pi/N$	&	$(j-1)\Delta x$	&	$(k-1)\frac{2\pi}{p_c N \Delta x}$	 \\
+Python (numpy) \T \B & $\sum\limits_{j=0}^{N-1} f_d(j)e^{-2\pi i j k /N}$					&	1									&	$-2\pi/N$	&	$j\Delta x$			&	$-k\frac{2\pi}{p_c N \Delta x}$			 \\
+\hline
+\end{tabular}}
+\caption{Example default parameters for the forward discrete Fourier transform for various numerical packages}
+\label{table:examples}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{c c c c}
+\hline
+DFT Package	\T \B	&	$F_c(u)$ Desired																	&	Amplitude Factor					&	$\left|\Delta u\right|$		\\ \hline
+IDL		\T \B				&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{i u x}$	&	$\Delta x N/\sqrt{2\pi}$	&	$2\pi/(N\Delta x)$ 				\\
+			\T \B				&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{i u x}$				&	$\Delta x N/2\pi$					&	$2\pi/(N\Delta x)$				\\
+			\T \B				&	$\int dx \ f_c(x) e^{2\pi i u x}$									&	$\Delta x N$							&	$1/(N\Delta x)$						\\ \hline
+MATLAB	\T \B			&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{i u x}$	&	$\Delta x/\sqrt{2\pi}$		&	$2\pi/(N\Delta x)$			 	\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{i u x}$				&	$\Delta x/2\pi$						&	$2\pi/(N\Delta x)$				\\
+				\T \B			&	$\int dx \ f_c(x) e^{2\pi i u x}$									&	$\Delta x$								&	$1/(N\Delta x)$						\\ \hline
+Mathematica	\T \B	&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{i u x}$	&	$\Delta x\sqrt{N/2\pi}$		&	$2\pi/(N\Delta x)$ 				\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{i u x}$				&	$\Delta x\sqrt{N}/2\pi$		&	$2\pi/(N\Delta x)$				\\
+				\T \B			&	$\int dx \ f_c(x) e^{2\pi i u x}$									&	$\Delta x\sqrt{N}$				&	$1/(N\Delta x)$						\\ \hline
+Python (numpy)	\T \B			&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{i u x}$	&	$\Delta x/\sqrt{2\pi}$		&	$2\pi/(N\Delta x)$			 	\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{i u x}$				&	$\Delta x/2\pi$						&	$2\pi/(N\Delta x)$				\\
+				\T \B			&	$\int dx \ f_c(x) e^{2\pi i u x}$									&	$\Delta x$								&	$1/(N\Delta x)$						\\ \hline
+\end{tabular}
+\caption{Common CFT conventions listed with the normalization factor and axis scaling factors for sample numerical packages.}
+\label{table:applied_examples}
+\end{center}
+\end{table}
+
+\section{Inverse Fourier Transform}
+
+The above argument holds for the inverse Fourier transform as well.  Define the inverse CFT as
+\begin{equation}
+\label{eq:inverse_continuous}
+f_c(x;C'_c,p'_c)=C'_c\int_{-\infty}^{\infty}du \ F_c(k) e^{i p'_c u x}
+\end{equation}
+and the inverse DFT as
+\begin{equation}
+\label{eq:inverse_discrete}
+f_d(j;C'_d,p'_d)=C'_d\sum\limits_{k=0}^{N-1}F_d(k)e^{i p'_d j k}.
+\end{equation}
+Then the result for the approximation of the inverse CFT is
+\begin{equation}
+\label{eq:inverse_related}
+f_c(x;C'_c,p'_c) \approx \frac{C'_c}{C'_d} \Delta u f_d(x / \Delta x;C'_d,p'_d)
+\end{equation}
+where $\Delta x = p_d'/p_c' \Delta u$.
+
+We summarize the default parameters for the inverse DFT for various numerical packages in Table \ref{table:inverse_examples}, and provide a few applied examples to common CFTs in Table \ref{table:inverse_applied_examples}.
+
+\begin{table}
+\begin{center}
+\centerline{\begin{tabular}{c c c c c c}
+\hline
+Package	\T \B			&	$f_d(j)$																																&	$C'_d$								&	$p'_d$		&	$u(k)$					&	$x(j)$																\\ \hline
+IDL			\T \B			&	$\sum\limits_{k=0}^{N-1} F_d(k)e^{2\pi i j k /N}$												&	$1$										&	$2\pi/N$	&	$k\Delta u$			&	$j\frac{2\pi}{p'_c N \Delta u}$				\\
+MATLAB	\T \B			&	$\frac{1}{N}\sum\limits_{k=1}^N F_d(k)e^{-2\pi i (j-1)(k-1)/N}$					&	$1/N$									&	$2\pi/N$	&	$(k-1)\Delta u$	&	$(j-1)\frac{2\pi}{p'_c N \Delta u}$		\\
+Mathematica	\T \B	&	$\frac{1}{\sqrt{N}}\sum\limits_{k=1}^N F_d(k)e^{-2\pi i (j-1)(k-1)/N}$	&	$\frac{1}{\sqrt{N}}$	&	$-2\pi/N$	&	$(k-1)\Delta u$	&	$-(j-1)\frac{2\pi}{p'_c N \Delta u}$ 	\\
+Python (numpy)			\T \B			&	$\frac{1}{N}\sum\limits_{k=0}^{N-1} F_d(k)e^{2\pi i j k /N}$												&	$1/N$										&	$2\pi/N$	&	$k\Delta u$			&	$j\frac{2\pi}{p'_c N \Delta u}$				\\
+\hline
+\end{tabular}}
+\caption{Example default parameters for the inverse discrete Fourier transform for various numerical packages}
+\label{table:inverse_examples}
+\end{center}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\centerline{\begin{tabular}{c c c c}
+\hline
+DFT Package	\T \B	&	$f_c(x)$ Desired																		&	Amplitude Factor					&	$\left|\Delta x\right|$	\\ \hline
+IDL			\T \B			&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{-i u x}$	&	$\Delta u/\sqrt{2\pi}$		&	$2\pi/(N \Delta u)$			\\
+				\T \B			&	$\int dx \ f_c(x) e^{-i u x}$												&	$\Delta u$								&	$2\pi/(N \Delta u)$			\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{-2\pi i u x}$		&	$\Delta u/2\pi$						&	$1/(N \Delta u)$				\\ \hline
+MATLAB	\T \B			&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{-i u x}$	&	$\Delta u N/\sqrt{2\pi}$	&	$2\pi/(N \Delta u)$ 		\\
+				\T \B			&	$\int dx \ f_c(x) e^{-i u x}$												&	$\Delta u N$							&	$2\pi/(N \Delta u)$			\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{-2\pi i u x}$		&	$\Delta u N/2\pi$					&	$1/(N \Delta u)$				\\ \hline
+Mathematica	\T \B	&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{-i u x}$	&	$\Delta u\sqrt{N/2\pi}$		&	$2\pi/(N \Delta u)$ 		\\
+				\T \B			&	$\int dx \ f_c(x) e^{-i u x}$												&	$\Delta u\sqrt{N}$				&	$2\pi/(N \Delta u)$			\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{-2\pi i u x}$		&	$\Delta u\sqrt{N}/2\pi$		&	$1/(N \Delta u)$				\\ \hline
+Python (numpy)	\T \B			&	$\frac{1}{\sqrt{2\pi}}\int dx \ f_c(x) e^{-i u x}$	&	$\Delta u N/\sqrt{2\pi}$	&	$2\pi/(N \Delta u)$ 		\\
+				\T \B			&	$\int dx \ f_c(x) e^{-i u x}$												&	$\Delta u N$							&	$2\pi/(N \Delta u)$			\\
+				\T \B			&	$\frac{1}{2\pi}\int dx \ f_c(x) e^{-2\pi i u x}$		&	$\Delta u N/2\pi$					&	$1/(N \Delta u)$				\\ \hline
+\end{tabular}}
+\caption{Common inverse CFT conventions listed with the normalization factor and axis scaling factors for sample numerical packages.}
+\label{table:inverse_applied_examples}
+\end{center}
+\end{table}
+
+
+
+\end{document}
