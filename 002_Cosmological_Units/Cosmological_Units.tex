@@ -1,0 +1,86 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{amsmath, amsthm, amssymb, commath, graphicx, bbold, endnotes, graphicx, subfigure, multirow, setspace, siunitx}
+\usepackage{amsmath}
+\usepackage[font=footnotesize]{caption}
+\usepackage[top=1.25in, bottom=1.25in, left=1.25in, right=1.25in]{geometry}
+\linespread{1}
+\setlength{\parindent}{30pt}
+
+\title{Cosmological Parameters and Conversions Memo}
+\author{Ruby Byrne}
+\date{October 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Parallel to the Line-of-Sight}
+
+From Morales and Hewitt 2004, frequency $\Delta f$ is related to the co-moving line-of-sight distance $\Delta r_z$ by
+\begin{equation}
+\Delta f \approx \frac{f_{21} E(z)}{D_H (1+z)^2} \Delta r_z
+\end{equation}
+The Fourier inverse of $\Delta f$ is $\eta$ and the Fourier inverse of $\Delta r_z$ is $k_z$. These are related by
+\begin{equation}
+\eta \approx \frac{D_H (1+z)^2}{2 \pi f_{21} E(z)} k_z
+\end{equation}
+$f_{21}$ is the frequency of the 21-cm signal, so $f_{21} = \frac{c}{0.21 \si{m}}$. $D_H$ is the Hubble distance. From Hogg 2000,
+\begin{equation}
+D_H = \frac{c}{H_0} = 3000 \frac{\si{Mpc}}{h}
+\end{equation}
+where $H_0$ is the Hubble constant in the present epoch and $h$ is a dimensionless quantity that is thought to be $0.6 < h < 0.9$ (the \textit{IDL} function \texttt{cosmology\_measures} defaults $h=0.71$). $H_0$ is related to $h$ by
+\begin{equation}
+H_0 = 100 \frac{h\si{km}}{\si{s.Mpc}}
+\end{equation}
+Again from Morales and Hewitt 2004,
+\begin{equation}
+E(z) = \sqrt{\Omega_M(1+z)^3+\Omega_k(1+z)^2+\Omega_{\Lambda}}
+\end{equation}
+where $\Omega_M$ is the matter constant, $\Omega_k$ is the curvature constant, and $\Omega_{\Lambda}$ is the ``lambda'' constant (whatever that is). 
+
+The \textit{IDL} function \texttt{cosmology\_measures} defaults these parameters to $\Omega_M=0.27$, $\Omega_k=0$, and $\Omega_{\Lambda}=0.73$. Plugging these to $E(z)$ for $z=7$ in gives $E(7) \approx 11.79$. Therefore at $z=7$, the conversion between $\eta$ and $k_z$ is given by
+\begin{equation}
+k_z \approx \left(5.51\times10^5 \frac{h}{\si{s.Mpc}}\right) \eta
+\end{equation}
+
+
+\section{Perpendicular to the Line-of-Sight}
+
+From Morales and Hewitt 2004, sky positions $\theta_x$ and $\theta_y$ are related to co-moving distances $r_x$ and $r_y$ according to
+\begin{equation}
+\theta_x = \frac{r_x}{D_M(z)}, \quad \theta_y = \frac{r_y}{D_M(z)}
+\end{equation}
+The Fourier inverses of $\theta_x$ and $\theta_y$ are $u$ and $v$ and the Fourier inverses of $r_x$ and $r_y$ are $k_x$ and $k_y$. These are related by
+\begin{equation}
+u = \frac{k_x D_M(z)}{2 \pi}, \quad v = \frac{k_y D_M(z)}{2 \pi}
+\end{equation}
+$D_M$ is the ``transverse co-moving distance.''
+
+From Hogg 2000,
+\begin{equation}
+  D_M=\begin{cases}
+    D_H \frac{1}{\sqrt{\Omega_k}} \text{sinh}(\sqrt{\Omega_k}D_C/D_H), & \text{for $\Omega_k>0$}\\
+    D_C, & \text{for $\Omega_k=0$}\\
+    D_H \frac{1}{\sqrt{\Omega_k}} \text{sin}(\sqrt{\Omega_k}D_C/D_H), & \text{for $\Omega_k<0$}
+  \end{cases}
+\end{equation}
+$D_C$ is the co-moving distance and is defined as
+\begin{equation}
+D_C = D_H \int_0^z \frac{dz'}{E(z')} = D_H \int_0^z \frac{dz'}{\sqrt{\Omega_M(1+z')^3+\Omega_k(1+z')^2+\Omega_{\Lambda}}}
+\end{equation}
+
+This integral must be evaluated numerically. With $z=7$, $\Omega_M=0.27$, $\Omega_k=0$, and $\Omega_{\Lambda}=0.73$ as above and evaluating the integral with 
+\textit{Mathematica}, we get that
+\begin{equation}
+D_C \approx D_H(2.09) = 6.27 \times 10^3 \frac{\si{Mpc}}{h}
+\end{equation}
+This integral is also evaluated by \textit{IDL}'s \texttt{cosmology\_measures} function. Since we are assuming $\Omega_k=0$, $D_M=D_C$ and
+\begin{equation}
+D_M \approx 6.27 \times 10^3 \frac{\si{Mpc}}{h}
+\end{equation}
+To convert from $(u, v)$ coordinates to $(k_x,k_y)$ coordinates, we therefore get
+\begin{equation}
+k_x \approx \left(1.00\times10^{-3} \frac{h}{\si{Mpc}}\right)u, \quad k_y \approx \left(1.00\times10^{-3} \frac{h}{\si{Mpc}}\right)v
+\end{equation}
+
+\end{document}
