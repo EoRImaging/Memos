@@ -1,0 +1,76 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{amsmath, amsthm, amssymb, commath, graphicx, bbold, endnotes, graphicx, subfigure, multirow, setspace}
+\usepackage[font=footnotesize]{caption}
+\usepackage[top=1.25in, bottom=1.25in, left=1.25in, right=1.25in]{geometry}
+\linespread{1}
+\setlength{\parindent}{30pt}
+
+\title{Cross Phase Calculation Memo}
+\author{Ruby Byrne}
+\date{April 2018}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Background}
+
+One degree of freedom in polarized calibration is the overall phase offset between the $x$- and $y$-dipoles. This phase offset, called $\phi$ for the purposes of this memo, corresponds to a mixing between the Stokes U and V modes. As we do not expect sky emission to be circularly polarized, we can constrain $\phi$ by minimizing Stokes V emission. 
+
+We use pseudo-Stokes parameters to simplify the calculation, allowing us to work in visibility space without gridding. Pseudo-Stokes parameters are calculated from the visibilities as follows:
+
+\begin{equation}
+\begin{bmatrix}
+	I^{\text{pseudo}} \\
+	Q^{\text{pseudo}} \\
+	U^{\text{pseudo}} \\
+	V^{\text{pseudo}} \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+	1 & 1 & 0 & 0 \\
+	1 & -1 & 0 & 0 \\
+	0 & 0 & 1 & 1 \\
+	0 & 0 & i & -i \\
+\end{bmatrix}
+\begin{bmatrix}
+	xx^* \\
+	yy^* \\
+	xy^* \\
+	yx^* \\
+\end{bmatrix}
+\end{equation}
+
+It is clear that the transformation $x \rightarrow x e^{-i \phi/2}$ and $y \rightarrow y e^{i \phi/2}$ leaves pseudo-I and pseudo-Q unchanged, but affects the pseudo-U and pseudo-V parameters.
+
+
+\section{Calculating the Cross Phase}
+
+To calculate $\phi$, we minimize the quantity $\sum_n |V^{\text{pseudo}}_n|^2$ where $n$ denotes the visibility index. We write the visibilities in terms of an amplitude and phase, such that $(xy^*)_n = A_n e^{i\delta_n} \rightarrow A_n e^{i\delta_n - i\phi}$ and $(yx^*)_n = B_n e^{i\gamma_n} \rightarrow B_n e^{i\gamma_n + i\phi}$. Now 
+\begin{equation}
+V^{\text{pseudo}}_n = A_n e^{i(\delta_n - \phi + \pi/2)} + B_n e^{i(\gamma_n + \phi - \pi/2)}
+\end{equation}
+It follows that
+\begin{equation}
+|V^{\text{pseudo}}_n|^2 = A_n^2 + B_n^2 - 2 A_n B_n \left[ \cos(\delta_n - \gamma_n) \cos(2 \phi) + \sin(\delta_n - \gamma_n) \sin(2 \phi) \right]
+\end{equation}
+Now to find $\phi$ we set $\frac{\partial}{\partial \phi} \sum_n |V^{\text{pseudo}}_n|^2 = 0$. This gives
+\begin{equation}
+\tan(2 \phi) = \frac{\sum_n A_n B_n \sin(\delta_n - \gamma_n)}{\sum_n A_n B_n \cos(\delta_n - \gamma_n)}
+\end{equation}
+Rewriting this in terms of the visibilities, we get
+\begin{equation}
+\tan(2 \phi) = \frac{\sum_n \text{Im} \left[ (xy^*)_n (yx^*)_n{}^* \right]}{\sum_n \text{Re} \left[ (xy^*)_n (yx^*)_n{}^* \right]}
+\end{equation}
+
+
+\section{Implementation in FHD}
+
+This calculation is implemented in FHD in the full-pol branch with the function \linebreak[4] \texttt{vis\_calibrate\_crosspol\_phase}. 
+
+It is important to note that FHD convention stores visibilities in the \texttt{vis\_ptr} object, where counterintuitively \texttt{vis\_ptr[0]} corresponds to $yy^*$, \texttt{vis\_ptr[1]} corresponds to $xx^*$, \texttt{vis\_ptr[2]} corresponds to $yx^*$, and \texttt{vis\_ptr[3]} corresponds to $xy^*$.
+
+The calculated value of $\phi$ is stored in the \texttt{cal.cross\_phase} object and the correct transformation is applied to the antenna gains. Since the raw visibilities are divided by the gains, the transformation $x \rightarrow x e^{-i \phi/2}$ is equivalent to $g_x \rightarrow g_x e^{i \phi/2}$ and $y \rightarrow y e^{i \phi/2}$ is equivalent to $g_y \rightarrow g_y e^{-i \phi/2}$. Here $g_x$ is the $x$-dipole gain (\texttt{cal.gain[1]}) and $g_y$ is the $y$-dipole gain (\texttt{cal.gain[0]}).
+
+\end{document}
