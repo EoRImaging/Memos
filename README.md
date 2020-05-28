@@ -9,3 +9,5 @@ Memos from our team that are useful and should be preserved.
 4. [Beam Resolution Test](PDFs/004_Beam_Resolution_Test.pdf) - Test on comparing using per frequency beam, which is robust but computationally expensive, and using per half coarse band beam, which is computationally efficient but less reliable, in FHD-eppsilon pipeline. 
 5. [Eppsilon Error Propagation](PDFs/005_eppsilon_error_prop.pdf) - Propagating error through gridding, to power spectrum (including even/odd sum and differencing), and treatment of PDFs after averaging data.
 6. [Image to PS Notes](PDFs/006_Image_to_PS_notes.pdf) - Some notes on calculating a power spectrum from an image cube. Includes getting units right, a detailed analytic window function calculation, how to calculate the window integral from FHD cubes, and a couple thoughts on the effect of w-projection.
+7. [Van Vleck A](PDFs/007_Van_Vleck_A.pdf) - Description of MWA quantization and implementation of a Van Vleck correction using pyuvdata.
+8. [Van Vleck B](PDFs/008_Van_Vleck_B.pdf) - Initial results of Van Vleck correction applied to two MWA time samples.
